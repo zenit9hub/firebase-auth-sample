@@ -24,6 +24,7 @@ import {
 } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { firebaseConfig } from './config/firebase.config';
+import { userService } from './services/user.service.js';
 
 // Initialize Firebase application
 try {
@@ -84,7 +85,13 @@ try {
       try {
         const email = document.getElementById("email").value;
         const password = document.getElementById("password").value;
+        
+        // Create user in Firebase Auth
         const result = await createUserWithEmailAndPassword(auth, email, password);
+        
+        // Save additional user data to Firestore
+        await userService.saveUserData(result.user, 'email');
+        
         console.log("Email sign up success:", result.user);
         alert("Successfully signed up!");
       } catch (error) {
@@ -103,6 +110,10 @@ try {
       try {
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
+        
+        // Save additional user data to Firestore
+        await userService.saveUserData(result.user, 'google');
+        
         console.log("Google sign in success:", result.user);
         alert("Successfully signed in with Google!");
       } catch (error) {
