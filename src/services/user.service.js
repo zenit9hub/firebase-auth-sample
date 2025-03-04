@@ -9,7 +9,7 @@ export const userService = {
   /**
    * Save user data to Firestore
    * 사용자 데이터를 Firestore에 저장
-   * 
+   *
    * @param {Object} user - Firebase Auth user object
    * @param {string} provider - Authentication provider (google, email, etc)
    */
@@ -20,7 +20,7 @@ export const userService = {
         userAgent: navigator.userAgent,
         platform: navigator.platform,
         language: navigator.language,
-        vendor: navigator.vendor
+        vendor: navigator.vendor,
       };
 
       // Create user document data
@@ -28,20 +28,55 @@ export const userService = {
         uid: user.uid,
         email: user.email,
         provider: provider,
-        createdAt: new Date(),  // Firestore will convert this to timestamp
+        createdAt: new Date(), // Firestore will convert this to timestamp
         deviceInfo: deviceInfo,
-        region: navigator.language.split('-')[1] || 'UNKNOWN'  // e.g., 'KR', 'US'
+        region: navigator.language.split("-")[1] || "UNKNOWN", // e.g., 'KR', 'US'
       };
 
       // Save to Firestore
       const userRef = doc(db, "users", user.uid);
       await setDoc(userRef, userData, { merge: true });
-      
+
       console.log("User data saved successfully");
       return userData;
     } catch (error) {
       console.error("Error saving user data:", error);
       throw error;
     }
-  }
-}; 
+  },
+
+  /**
+   * Update user login information to backend server
+   * 백엔드 서버에 사용자 로그인 정보 업데이트
+   */
+  async updateLoginInfo(user) {
+    try {
+      const response = await fetch(
+        "http://localhost:3000/users/update-login-info",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            emailVerified: user.emailVerified,
+            displayName: user.displayName,
+            isAnonymous: user.isAnonymous,
+            photoURL: user.photoURL,
+            providerData: user.providerData,
+            stsTokenManager: user.stsTokenManager,
+            createdAt: new Date(user.metadata.creationTime).getTime(),
+            lastLoginAt: new Date(user.metadata.lastSignInTime).getTime(),
+          }),
+        }
+      );
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      console.error("로그인 정보 업데이트 실패:", error);
+      throw error;
+    }
+  },
+};
