@@ -52,7 +52,7 @@ export const userService = {
   async updateLoginInfo(user) {
     try {
       const response = await fetch(
-        "http://localhost:3000/users/update-login-info",
+        `${import.meta.env.VITE_API_BASE_URL}/users/update-login-info`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -71,8 +71,13 @@ export const userService = {
         }
       );
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `HTTP error! status: ${response.status}, message: ${errorText}`
+        );
+      }
+
       return await response.json();
     } catch (error) {
       console.error("로그인 정보 업데이트 실패:", error);
